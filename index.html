@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cozy Chaos Planner - Weekly</title>
+<style>
+body {
+    font-family: sans-serif;
+    background: #fff8f0;
+    margin: 0;
+    padding: 10px;
+}
+h2 {
+    margin: 0;
+    padding: 10px;
+    background: #ffd9d9;
+    cursor: pointer;
+    border-radius: 5px;
+}
+.day-section {
+    margin-bottom: 15px;
+}
+.task-card {
+    display: flex;
+    flex-direction: column;
+    margin: 5px 0;
+    padding: 8px;
+    border-radius: 8px;
+    color: #000;
+    font-size: 14px;
+}
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.task-header .title-time {
+    display: flex;
+    flex-direction: column;
+}
+.actions button {
+    margin-left: 5px;
+    border: none;
+    padding: 2px 5px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+input[type="text"], select, input[type="time"] {
+    margin: 5px 0;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+.edit-form {
+    margin-top: 5px;
+}
+</style>
+</head>
+<body>
+
+<h1>Cozy Chaos Planner - Weekly View</h1>
+
+<div>
+    <input type="text" id="taskName" placeholder="Task name">
+    <input type="time" id="taskTime">
+    <select id="taskColor">
+        <option value="#FFB3BA">Pink</option>
+        <option value="#BAFFC9">Mint</option>
+        <option value="#BAE1FF">Sky Blue</option>
+        <option value="#FFFFBA">Yellow</option>
+        <option value="#E3BAFF">Lavender</option>
+    </select>
+    <select id="taskDay">
+        <option value="monday">Monday</option>
+        <option value="tuesday">Tuesday</option>
+        <option value="wednesday">Wednesday</option>
+        <option value="thursday">Thursday</option>
+        <option value="friday">Friday</option>
+        <option value="saturday">Saturday</option>
+        <option value="sunday">Sunday</option>
+    </select>
+    <button id="addTaskBtn">Add Task</button>
+</div>
+
+<div id="weekContainer">
+    <div class="day-section" id="mondaySection"><h2>Monday</h2><div class="tasks"></div></div>
+    <div class="day-section" id="tuesdaySection"><h2>Tuesday</h2><div class="tasks"></div></div>
+    <div class="day-section" id="wednesdaySection"><h2>Wednesday</h2><div class="tasks"></div></div>
+    <div class="day-section" id="thursdaySection"><h2>Thursday</h2><div class="tasks"></div></div>
+    <div class="day-section" id="fridaySection"><h2>Friday</h2><div class="tasks"></div></div>
+    <div class="day-section" id="saturdaySection"><h2>Saturday</h2><div class="tasks"></div></div>
+    <div class="day-section" id="sundaySection"><h2>Sunday</h2><div class="tasks"></div></div>
+</div>
+
+<script>
+let tasks = JSON.parse(localStorage.getItem('weeklyTasks')) || {
+    monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: []
+};
+
+function saveTasks() {
+    localStorage.setItem('weeklyTasks', JSON.stringify(tasks));
+}
+
+function renderTasks() {
+    for (const day of Object.keys(tasks)) {
+        const section = document.getElementById(day + "Section").querySelector('.tasks');
+        section.innerHTML = '';
+        tasks[day].forEach((task, index) => {
+            const card = document.createElement('div');
+            card.className = 'task-card';
+            card.style.backgroundColor = task.color;
+            
+            const header = document.createElement('div');
+            header.className = 'task-header';
+            
+            const titleTime = document.createElement('div');
+            titleTime.className = 'title-time';
+            const title = document.createElement('span');
+            title.textContent = task.name;
+            const time = document.createElement('span');
+            if(task.time) {
+                let [hour, minute] = task.time.split(':');
+                hour = parseInt(hour);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                hour = hour % 12 || 12;
+                time.textContent = `${hour}:${minute} ${ampm}`;
+            }
+            titleTime.appendChild(title);
+            titleTime.appendChild(time);
+            
+            const actions = document.createElement('div');
+            actions.className = 'actions';
+            
+            const doneCheckbox = document.createElement('input');
+            doneCheckbox.type = 'checkbox';
+            doneCheckbox.checked = task.done || false;
+            doneCheckbox.addEventListener('change', () => {
+                task.done = doneCheckbox.checked;
+                saveTasks();
+                renderTasks();
+            });
+            actions.appendChild(doneCheckbox);
+            
+            // Edit button
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit';
+            editBtn.addEventListener('click', () => {
+                showEditForm(day, index, card, task);
+            });
+            actions.appendChild(editBtn);
+            
+            // Delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.addEventListener('click', () => {
+                tasks[day].splice(index, 1);
+                saveTasks();
+                renderTasks();
+            });
+            actions.appendChild(deleteBtn);
+            
+            header.appendChild(titleTime);
+            header.appendChild(actions);
+            card.appendChild(header);
+            section.appendChild(card);
+        });
+    }
+}
+
+function showEditForm(day, index, card, task) {
+    card.innerHTML = '';
+    const form = document.createElement('div');
+    form.className = 'edit-form';
+    
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.value = task.name;
+    
+    const timeInput = document.createElement('input');
+    timeInput.type = 'time';
+    timeInput.value = task.time || '';
+    
+    const colorSelect = document.createElement('select');
+    const colors = {Pink:'#FFB3BA', Mint:'#BAFFC9', 'Sky Blue':'#BAE1FF', Yellow:'#FFFFBA', Lavender:'#E3BAFF'};
+    for(const c in colors){
+        const opt = document.createElement('option');
+        opt.value = colors[c];
+        opt.textContent = c;
+        if(task.color === colors[c]) opt.selected = true;
+        colorSelect.appendChild(opt);
+    }
+    
+    const daySelect = document.createElement('select');
+    for(const d of Object.keys(tasks)){
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d.charAt(0).toUpperCase() + d.slice(1);
+        if(day===d) opt.selected=true;
+        daySelect.appendChild(opt);
+    }
+    
+    const saveBtn = document.createElement('button');
+    saveBtn.textContent = 'Save';
+    saveBtn.addEventListener('click', () => {
+        task.name = nameInput.value.trim() || task.name;
+        task.time = timeInput.value;
+        task.color = colorSelect.value;
+        if(daySelect.value !== day){
+            tasks[day].splice(index,1);
+            tasks[daySelect.value].push(task);
+        }
+        saveTasks();
+        renderTasks();
+    });
+    
+    form.appendChild(nameInput);
+    form.appendChild(timeInput);
+    form.appendChild(colorSelect);
+    form.appendChild(daySelect);
+    form.appendChild(saveBtn);
+    card.appendChild(form);
+}
+
+document.getElementById('addTaskBtn').addEventListener('click', () => {
+    const name = document.getElementById('taskName').value.trim();
+    const time = document.getElementById('taskTime').value;
+    const color = document.getElementById('taskColor').value;
+    const day = document.getElementById('taskDay').value;
+    if(!name) return;
+    
+    tasks[day].push({name, time, color, done:false});
+    saveTasks();
+    renderTasks();
+    
+    document.getElementById('taskName').value = '';
+    document.getElementById('taskTime').value = '';
+});
+
+document.querySelectorAll('h2').forEach(h=>{
+    h.addEventListener('click', () => {
+        const tasksDiv = h.nextElementSibling;
+        tasksDiv.style.display = tasksDiv.style.display === 'none' ? 'block' : 'none';
+    });
+});
+
+// Initial render
+renderTasks();
+</script>
+
+</body>
+</html>
