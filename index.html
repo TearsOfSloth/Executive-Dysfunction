@@ -3,278 +3,229 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cozy Chaos Board</title>
-
+<title>Cozy Chaos Planner - Weekly</title>
 <style>
 body {
-  font-family: system-ui, sans-serif;
-  background: #f4f3f8;
-  padding: 20px;
+    font-family: sans-serif;
+    background: #fff8f0;
+    margin: 0;
+    padding: 0 10px;
 }
-
-h1 {
-  text-align: center;
+h2 {
+    margin: 0;
+    padding: 10px;
+    background: #ffd9d9;
+    cursor: pointer;
+    border-radius: 5px;
 }
-
-.task-form {
-  background: white;
-  padding: 16px;
-  border-radius: 14px;
-  display: grid;
-  gap: 10px;
-  max-width: 520px;
-  margin: 0 auto 20px;
+.day-section {
+    margin-bottom: 15px;
 }
-
-input, select, button {
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px solid #ccc;
-  font-size: 15px;
+.task-card {
+    display: flex;
+    flex-direction: column;
+    margin: 5px 0;
+    padding: 8px;
+    border-radius: 8px;
+    color: #000;
+    font-size: 14px;
 }
-
+.task-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.task-header .title-time {
+    display: flex;
+    flex-direction: column;
+}
+.subtasks {
+    margin-top: 5px;
+    margin-left: 15px;
+}
+.subtask {
+    display: flex;
+    align-items: center;
+}
 button {
-  background: #6c7cff;
-  color: white;
-  border: none;
-  cursor: pointer;
+    margin-left: 5px;
+    border: none;
+    padding: 2px 5px;
+    border-radius: 5px;
+    cursor: pointer;
 }
-
-.section {
-  max-width: 600px;
-  margin: 0 auto 16px;
-}
-
-.section-header {
-  background: #dfe3ff;
-  padding: 12px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-weight: bold;
-  display: flex;
-  justify-content: space-between;
-}
-
-.task-list {
-  margin-top: 8px;
-}
-
-.task {
-  border-radius: 12px;
-  padding: 10px;
-  margin-bottom: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,.08);
-}
-
-.task-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.task-title {
-  flex-grow: 1;
-}
-
-.task.completed .task-title {
-  text-decoration: line-through;
-  opacity: .6;
-}
-
-.task-time {
-  font-size: 12px;
-  opacity: .7;
-}
-
-.task-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-  flex-wrap: wrap;
-}
-
-.task-actions button {
-  background: #eee;
-  color: #333;
-  font-size: 12px;
-  padding: 5px 8px;
-}
-
-.color-picker {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.color-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-}
-
-.color-btn.selected {
-  border-color: #333;
+input[type="text"], select, input[type="time"] {
+    margin: 5px 0;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
 }
 </style>
 </head>
-
 <body>
 
-<h1>☁️ Cozy Chaos Board</h1>
+<h1>Cozy Chaos Planner - Weekly View</h1>
 
-<div class="task-form">
-  <input id="taskName" placeholder="Task name">
-  <input id="taskTime" type="time">
-  <select id="taskWhen">
-    <option value="today">Today</option>
-    <option value="tomorrow">Tomorrow</option>
-    <option value="later">Later</option>
-  </select>
-  <div id="colorPicker" class="color-picker"></div>
-  <button onclick="addTask()">Add Task</button>
+<div>
+    <input type="text" id="taskName" placeholder="Task name">
+    <input type="time" id="taskTime">
+    <select id="taskColor">
+        <option value="#FFB3BA">Pink</option>
+        <option value="#BAFFC9">Mint</option>
+        <option value="#BAE1FF">Sky Blue</option>
+        <option value="#FFFFBA">Yellow</option>
+        <option value="#E3BAFF">Lavender</option>
+    </select>
+    <select id="taskDay">
+        <option value="monday">Monday</option>
+        <option value="tuesday">Tuesday</option>
+        <option value="wednesday">Wednesday</option>
+        <option value="thursday">Thursday</option>
+        <option value="friday">Friday</option>
+        <option value="saturday">Saturday</option>
+        <option value="sunday">Sunday</option>
+    </select>
+    <button id="addTaskBtn">Add Task</button>
 </div>
 
-<div id="board"></div>
+<div id="weekContainer">
+    <div class="day-section" id="mondaySection">
+        <h2>Monday</h2>
+        <div class="tasks"></div>
+    </div>
+    <div class="day-section" id="tuesdaySection">
+        <h2>Tuesday</h2>
+        <div class="tasks"></div>
+    </div>
+    <div class="day-section" id="wednesdaySection">
+        <h2>Wednesday</h2>
+        <div class="tasks"></div>
+    </div>
+    <div class="day-section" id="thursdaySection">
+        <h2>Thursday</h2>
+        <div class="tasks"></div>
+    </div>
+    <div class="day-section" id="fridaySection">
+        <h2>Friday</h2>
+        <div class="tasks"></div>
+    </div>
+    <div class="day-section" id="saturdaySection">
+        <h2>Saturday</h2>
+        <div class="tasks"></div>
+    </div>
+    <div class="day-section" id="sundaySection">
+        <h2>Sunday</h2>
+        <div class="tasks"></div>
+    </div>
+</div>
 
 <script>
-const pastelColors = [
-  "#ffb3ba", "#b3ffd9", "#fff1a8", "#b3c7ff",
-  "#e7b3ff", "#b3ecff", "#ffd8b3", "#caffbf"
-];
-
-let selectedColor = pastelColors[0];
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-let collapsed = JSON.parse(localStorage.getItem("collapsed")) || {
-  today:false, tomorrow:false, later:false
+let tasks = JSON.parse(localStorage.getItem('weeklyTasks')) || {
+    monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: []
 };
 
-const picker = document.getElementById("colorPicker");
+function saveTasks() {
+    localStorage.setItem('weeklyTasks', JSON.stringify(tasks));
+}
 
-pastelColors.forEach(c => {
-  const btn = document.createElement("div");
-  btn.className = "color-btn";
-  btn.style.background = c;
-  if (c === selectedColor) btn.classList.add("selected");
-  btn.onclick = () => {
-    document.querySelectorAll(".color-btn").forEach(b=>b.classList.remove("selected"));
-    btn.classList.add("selected");
-    selectedColor = c;
-  };
-  picker.appendChild(btn);
+function renderTasks() {
+    for (const day of Object.keys(tasks)) {
+        const section = document.getElementById(day + "Section").querySelector('.tasks');
+        section.innerHTML = '';
+        tasks[day].forEach((task, index) => {
+            const card = document.createElement('div');
+            card.className = 'task-card';
+            card.style.backgroundColor = task.color;
+            
+            const header = document.createElement('div');
+            header.className = 'task-header';
+            
+            const titleTime = document.createElement('div');
+            titleTime.className = 'title-time';
+            const title = document.createElement('span');
+            title.textContent = task.name;
+            const time = document.createElement('span');
+            if(task.time) {
+                let [hour, minute] = task.time.split(':');
+                hour = parseInt(hour);
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                hour = hour % 12 || 12;
+                time.textContent = `${hour}:${minute} ${ampm}`;
+            }
+            titleTime.appendChild(title);
+            titleTime.appendChild(time);
+            
+            const actions = document.createElement('div');
+            
+            const doneCheckbox = document.createElement('input');
+            doneCheckbox.type = 'checkbox';
+            doneCheckbox.checked = task.done || false;
+            doneCheckbox.addEventListener('change', () => {
+                task.done = doneCheckbox.checked;
+                saveTasks();
+            });
+            actions.appendChild(doneCheckbox);
+            
+            // Edit / Delete / Move buttons placeholder (future)
+            
+            header.appendChild(titleTime);
+            header.appendChild(actions);
+            card.appendChild(header);
+            
+            // Subtasks
+            if(task.subtasks && task.subtasks.length > 0){
+                const subtaskContainer = document.createElement('div');
+                subtaskContainer.className = 'subtasks';
+                task.subtasks.forEach((subtask, subIndex)=>{
+                    const subDiv = document.createElement('div');
+                    subDiv.className = 'subtask';
+                    const cb = document.createElement('input');
+                    cb.type = 'checkbox';
+                    cb.checked = subtask.done || false;
+                    cb.addEventListener('change', () => {
+                        subtask.done = cb.checked;
+                        saveTasks();
+                    });
+                    const lbl = document.createElement('span');
+                    lbl.textContent = subtask.name;
+                    subDiv.appendChild(cb);
+                    subDiv.appendChild(lbl);
+                    subtaskContainer.appendChild(subDiv);
+                });
+                card.appendChild(subtaskContainer);
+            }
+            
+            section.appendChild(card);
+        });
+    }
+}
+
+document.getElementById('addTaskBtn').addEventListener('click', () => {
+    const name = document.getElementById('taskName').value.trim();
+    const time = document.getElementById('taskTime').value;
+    const color = document.getElementById('taskColor').value;
+    const day = document.getElementById('taskDay').value;
+    if(!name) return;
+    
+    tasks[day].push({name, time, color, done:false, subtasks:[]});
+    saveTasks();
+    renderTasks();
+    
+    // Clear inputs
+    document.getElementById('taskName').value = '';
+    document.getElementById('taskTime').value = '';
 });
 
-function save() {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-  localStorage.setItem("collapsed", JSON.stringify(collapsed));
-}
-
-function formatTime(t) {
-  if (!t) return "";
-  let [h,m] = t.split(":");
-  h = parseInt(h);
-  const ap = h >= 12 ? "PM" : "AM";
-  h = h % 12 || 12;
-  return `${h}:${m} ${ap}`;
-}
-
-function addTask() {
-  const name = taskName.value.trim();
-  if (!name) return;
-
-  tasks.push({
-    id: Date.now(),
-    name,
-    time: taskTime.value,
-    when: taskWhen.value,
-    color: selectedColor,
-    done: false
-  });
-
-  taskName.value = "";
-  taskTime.value = "";
-  save();
-  render();
-}
-
-function render() {
-  board.innerHTML = "";
-
-  ["today","tomorrow","later"].forEach(sec => {
-    const section = document.createElement("div");
-    section.className = "section";
-
-    const header = document.createElement("div");
-    header.className = "section-header";
-    header.innerHTML = `${sec.toUpperCase()} <span>${collapsed[sec]?"▸":"▾"}</span>`;
-    header.onclick = () => {
-      collapsed[sec] = !collapsed[sec];
-      save();
-      render();
-    };
-
-    const list = document.createElement("div");
-    list.className = "task-list";
-    if (collapsed[sec]) list.style.display = "none";
-
-    tasks.filter(t=>t.when===sec).forEach(t => {
-      const card = document.createElement("div");
-      card.className = "task" + (t.done?" completed":"");
-      card.style.background = t.color;
-
-      const row = document.createElement("div");
-      row.className = "task-row";
-
-      const check = document.createElement("input");
-      check.type = "checkbox";
-      check.checked = t.done;
-      check.onchange = () => {
-        t.done = check.checked;
-        save(); render();
-      };
-
-      const title = document.createElement("div");
-      title.className = "task-title";
-      title.textContent = t.name;
-
-      const time = document.createElement("div");
-      time.className = "task-time";
-      time.textContent = formatTime(t.time);
-
-      row.append(check, title, time);
-      card.appendChild(row);
-
-      const actions = document.createElement("div");
-      actions.className = "task-actions";
-
-      ["today","tomorrow","later"].forEach(w => {
-        const btn = document.createElement("button");
-        btn.textContent = w;
-        btn.onclick = () => {
-          t.when = w;
-          save(); render();
-        };
-        actions.appendChild(btn);
-      });
-
-      const del = document.createElement("button");
-      del.textContent = "❌";
-      del.onclick = () => {
-        tasks = tasks.filter(x=>x.id!==t.id);
-        save(); render();
-      };
-
-      actions.appendChild(del);
-      card.appendChild(actions);
-      list.appendChild(card);
+document.querySelectorAll('h2').forEach(h=>{
+    h.addEventListener('click', () => {
+        const tasksDiv = h.nextElementSibling;
+        tasksDiv.style.display = tasksDiv.style.display === 'none' ? 'block' : 'none';
     });
+});
 
-    section.append(header, list);
-    board.appendChild(section);
-  });
-}
-
-render();
+// Initial render
+renderTasks();
 </script>
+
 </body>
 </html>
