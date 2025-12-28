@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cozy Chaos Board</title>
+
+<style>
+body {
+  font-family: system-ui, sans-serif;
+  background: #f4f3f8;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+.task-form {
+  background: white;
+  padding: 16px;
+  border-radius: 14px;
+  display: grid;
+  gap: 10px;
+  max-width: 520px;
+  margin: 0 auto 20px;
+}
+
+input, select, button {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+}
+
+button {
+  background: #6c7cff;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.section {
+  max-width: 600px;
+  margin: 0 auto 16px;
+}
+
+.section-header {
+  background: #dfe3ff;
+  padding: 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+}
+
+.task-list {
+  margin-top: 8px;
+}
+
+.task {
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-title {
+  flex-grow: 1;
+}
+
+.task.completed .task-title {
+  text-decoration: line-through;
+  opacity: .6;
+}
+
+.task-time {
+  font-size: 12px;
+  opacity: .7;
+}
+
+.task-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.task-actions button {
+  background: #eee;
+  color: #333;
+  font-size: 12px;
+  padding: 5px 8px;
+}
+
+.color-picker {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.color-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.color-btn.selected {
+  border-color: #333;
+}
+</style>
+</head>
+
+<body>
+
+<h1>☁️ Cozy Chaos Board</h1>
+
+<div class="task-form">
+  <input id="taskName" placeholder="Task name">
+  <input id="taskTime" type="time">
+  <select id="taskWhen">
+    <option value="today">Today</option>
+    <option value="tomorrow">Tomorrow</option>
+    <option value="later">Later</option>
+  </select>
+  <div id="colorPicker" class="color-picker"></div>
+  <button onclick="addTask()">Add Task</button>
+</div>
+
+<div id="board"></div>
+
+<script>
+const pastelColors = [
+  "#ffb3ba", "#b3ffd9", "#fff1a8", "#b3c7ff",
+  "#e7b3ff", "#b3ecff", "#ffd8b3", "#caffbf"
+];
+
+let selectedColor = pastelColors[0];
+let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+let collapsed = JSON.parse(localStorage.getItem("collapsed")) || {
+  today:false, tomorrow:false, later:false
+};
+
+const picker = document.getElementById("colorPicker");
+
+pastelColors.forEach(c => {
+  const btn = document.createElement("div");
+  btn.className = "color-btn";
+  btn.style.background = c;
+  if (c === selectedColor) btn.classList.add("selected");
+  btn.onclick = () => {
+    document.querySelectorAll(".color-btn").forEach(b=>b.classList.remove("selected"));
+    btn.classList.add("selected");
+    selectedColor = c;
+  };
+  picker.appendChild(btn);
+});
+
+function save() {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  localStorage.setItem("collapsed", JSON.stringify(collapsed));
+}
+
+function formatTime(t) {
+  if (!t) return "";
+  let [h,m] = t.split(":");
+  h = parseInt(h);
+  const ap = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${h}:${m} ${ap}`;
+}
+
+function addTask() {
+  const name = taskName.value.trim();
+  if (!name) return;
+
+  tasks.push({
+    id: Date.now(),
+    name,
+    time: taskTime.value,
+    when: taskWhen.value,
+    color: selectedColor,
+    done: false
+  });
+
+  taskName.value = "";
+  taskTime.value = "";
+  save();
+  render();
+}
+
+function render() {
+  board.innerHTML = "";
+
+  ["today","tomorrow","later"].forEach(sec => {
+    const section = document.createElement("div");
+    section.className = "section";
+
+    const header = document.createElement("div");
+    header.className = "section-header";
+    header.innerHTML = `${sec.toUpperCase()} <span>${collapsed[sec]?"▸":"▾"}</span>`;
+    header.onclick = () => {
+      collapsed[sec] = !collapsed[sec];
+      save();
+      render();
+    };
+
+    const list = document.createElement("div");
+    list.className = "task-list";
+    if (collapsed[sec]) list.style.display = "none";
+
+    tasks.filter(t=>t.when===sec).forEach(t => {
+      const card = document.createElement("div");
+      card.className = "task" + (t.done?" completed":"");
+      card.style.background = t.color;
+
+      const row = document.createElement("div");
+      row.className = "task-row";
+
+      const check = document.createElement("input");
+      check.type = "checkbox";
+      check.checked = t.done;
+      check.onchange = () => {
+        t.done = check.checked;
+        save(); render();
+      };
+
+      const title = document.createElement("div");
+      title.className = "task-title";
+      title.textContent = t.name;
+
+      const time = document.createElement("div");
+      time.className = "task-time";
+      time.textContent = formatTime(t.time);
+
+      row.append(check, title, time);
+      card.appendChild(row);
+
+      const actions = document.createElement("div");
+      actions.className = "task-actions";
+
+      ["today","tomorrow","later"].forEach(w => {
+        const btn = document.createElement("button");
+        btn.textContent = w;
+        btn.onclick = () => {
+          t.when = w;
+          save(); render();
+        };
+        actions.appendChild(btn);
+      });
+
+      const del = document.createElement("button");
+      del.textContent = "❌";
+      del.onclick = () => {
+        tasks = tasks.filter(x=>x.id!==t.id);
+        save(); render();
+      };
+
+      actions.appendChild(del);
+      card.appendChild(actions);
+      list.appendChild(card);
+    });
+
+    section.append(header, list);
+    board.appendChild(section);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
