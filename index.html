@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cozy Chaos Planner</title>
+
+<style>
+body {
+  font-family: system-ui, -apple-system;
+  background: #fff4ef;
+  margin: 0;
+  padding: 12px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.day {
+  margin-bottom: 14px;
+}
+
+.day h2 {
+  background: #ffd6e0;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.tasks {
+  margin-top: 6px;
+}
+
+.task {
+  background: var(--color);
+  padding: 10px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  transition: opacity 0.3s;
+}
+
+.task.done {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.badge {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.actions button {
+  margin-left: 4px;
+}
+
+input, select, button {
+  margin: 4px 0;
+  padding: 6px;
+  border-radius: 6px;
+}
+
+button {
+  border: none;
+  background: #ffb3c6;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🌸 Cozy Chaos Planner</h1>
+
+<div id="add">
+  <input id="name" placeholder="Task name">
+  <input id="time" type="time">
+  <input id="startDate" type="date">
+  <select id="color">
+    <option value="#FFB3BA">Pink</option>
+    <option value="#BAFFC9">Mint</option>
+    <option value="#BAE1FF">Blue</option>
+    <option value="#FFF3B0">Yellow</option>
+    <option value="#E6C9FF">Lavender</option>
+  </select>
+
+  <select id="repeat">
+    <option value="none">No repeat</option>
+    <option value="daily">Daily</option>
+    <option value="weekly">Weekly</option>
+    <option value="everyX">Every X days</option>
+  </select>
+
+  <select id="weekday">
+    <option value="1">Mon</option>
+    <option value="2">Tue</option>
+    <option value="3">Wed</option>
+    <option value="4">Thu</option>
+    <option value="5">Fri</option>
+    <option value="6">Sat</option>
+    <option value="0">Sun</option>
+  </select>
+
+  <input id="interval" type="number" placeholder="X" style="width:60px">
+  <button onclick="addTask()">Add Task</button>
+</div>
+
+<div id="week"></div>
+
+<script>
+const defsKey = 'taskDefs';
+const instKey = 'taskInstances';
+const metaKey = 'meta';
+
+let defs = JSON.parse(localStorage.getItem(defsKey)) || [];
+let instances = JSON.parse(localStorage.getItem(instKey)) || [];
+let meta = JSON.parse(localStorage.getItem(metaKey)) || {};
+
+const today = new Date();
+const weekStart = new Date(today);
+weekStart.setDate(today.getDate() - ((today.getDay()+6)%7));
+
+function sameWeek(d1, d2) {
+  const a = new Date(d1);
+  const b = new Date(d2);
+  a.setHours(0,0,0,0);
+  b.setHours(0,0,0,0);
+  return Math.abs(a - b) < 7*86400000;
+}
+
+if (!meta.lastWeek || !sameWeek(meta.lastWeek, today)) {
+  instances = [];
+  generateWeek();
+  meta.lastWeek = today;
+  save();
+}
+
+function generateWeek() {
+  for (let i=0;i<7;i++) {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate()+i);
+
+    defs.forEach(def=>{
+      if (shouldAppear(def, date)) {
+        instances.push({
+          id: crypto.randomUUID(),
+          defId: def.id,
+          date: date.toISOString().split('T')[0],
+          done: false
+        });
+      }
+    });
+  }
+}
+
+function shouldAppear(def, date) {
+  const start = new Date(def.startDate);
+  if (date < start) return false;
+
+  if (def.repeat === 'daily') return true;
+  if (def.repeat === 'weekly') return date.getDay() == def.weekday;
+  if (def.repeat === 'everyX') {
+    const diff = Math.floor((date-start)/86400000);
+    return diff % def.interval === 0;
+  }
+  return date.toDateString() === start.toDateString();
+}
+
+function save() {
+  localStorage.setItem(defsKey, JSON.stringify(defs));
+  localStorage.setItem(instKey, JSON.stringify(instances));
+  localStorage.setItem(metaKey, JSON.stringify(meta));
+}
+
+function addTask() {
+  const def = {
+    id: crypto.randomUUID(),
+    name: name.value,
+    time: time.value,
+    color: color.value,
+    startDate: startDate.value || today.toISOString().split('T')[0],
+    repeat: repeat.value,
+    weekday: weekday.value,
+    interval: interval.value || 1
+  };
+  defs.push(def);
+  save();
+  location.reload();
+}
+
+function render() {
+  week.innerHTML='';
+  for (let i=0;i<7;i++) {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate()+i);
+    const dstr = date.toISOString().split('T')[0];
+
+    const day = document.createElement('div');
+    day.className='day';
+    day.innerHTML=`<h2>${date.toLocaleDateString(undefined,{weekday:'long'})}</h2><div class="tasks"></div>`;
+    const list = day.querySelector('.tasks');
+
+    instances.filter(t=>t.date===dstr).forEach(inst=>{
+      const def = defs.find(d=>d.id===inst.defId);
+      const card = document.createElement('div');
+      card.className='task'+(inst.done?' done':'');
+      card.style.setProperty('--color', def.color);
+
+      card.innerHTML=`
+        <div class="task-header">
+          <label>
+            <input type="checkbox" ${inst.done?'checked':''}>
+            ${def.name} ${def.time||''}
+          </label>
+          <span class="badge">🔁 ${def.repeat}</span>
+        </div>
+      `;
+
+      card.querySelector('input').onchange=()=>{
+        inst.done=!inst.done;
+        save(); render();
+      };
+
+      list.appendChild(card);
+    });
+
+    week.appendChild(day);
+  }
+}
+
+render();
+</script>
+
+</body>
+</html>
