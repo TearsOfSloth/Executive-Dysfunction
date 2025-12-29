@@ -181,7 +181,7 @@ function save() {
 
 function addTask() {
   const def = {
-    id: crypto.randomUUID(),
+    id: Date.now().toString() + Math.random().toString(36).slice(2)
     name: name.value,
     time: time.value,
     color: color.value,
